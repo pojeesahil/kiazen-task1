@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 import os
 from langchain.chat_models import init_chat_model
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_chroma import Chroma
 load_dotenv("secure.env")
 api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 llm = init_chat_model(
@@ -24,7 +26,7 @@ result = agent.invoke(
 )
 print(result["messages"][-1].content_blocks)
 with open("test.txt") as f:
-    state_of_the_union=f.read()
+    txt=f.read()
 
 text_splitter=RecursiveCharacterTextSplitter(
     chunk_size=100,
@@ -32,6 +34,13 @@ text_splitter=RecursiveCharacterTextSplitter(
     length_function=len,
     is_separator_regex=False,
 )
-texts=text_splitter.create_documents([state_of_the_union])
-print(texts[0])
-print(texts[1])
+texts=text_splitter.create_documents([txt])
+embeddings=GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+
+vectorstore=Chroma.from_documents(
+    documents=texts,
+    embedding=embeddings,
+    persist_directory="./chroma_db"
+)
+
+print("chuck saved")
