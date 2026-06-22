@@ -7,9 +7,14 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_unstructured import UnstructuredLoader
+from langchain_community.vectorstores.utils import filter_complex_metadata
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+import logging
+#Not part of program but langchain_community.vectorstores.utils turned on the logging which fills the terminal with unnecessary data
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("google").setLevel(logging.WARNING)
 load_dotenv("secure.env")
 api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 embeddings=GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
@@ -26,7 +31,7 @@ def indexDatabase():
             files.append(str(file))
     txt=[]
     for path in files:
-        loader=UnstructuredLoader(file_path=path)
+        loader=UnstructuredLoader(file_path=path,strategy="fast")
         loader=loader.load()
         for file in loader:
             file.metadata["source"]=Path(path).name
@@ -38,13 +43,13 @@ def indexDatabase():
         is_separator_regex=False,
     )
     texts=text_splitter.split_documents(txt)
-
+    ftexts=filter_complex_metadata(texts)
     vectorstore=Chroma.from_documents(
-        documents=texts,
+        documents=ftexts,
         embedding=embeddings,
         persist_directory="./chroma_db"
     )
-    print("chuck saved")
+    print("Reindexing done")
 def askQuestion(question):
     vectorstore=Chroma(
         embedding_function=embeddings,
