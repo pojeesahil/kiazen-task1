@@ -6,7 +6,7 @@ from langchain.chat_models import init_chat_model
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -26,7 +26,7 @@ def indexDatabase():
             files.append(str(file))
     txt=[]
     for path in files:
-        loader=UnstructuredFileLoader(file_path=path)
+        loader=UnstructuredLoader(file_path=path)
         loader=loader.load()
         for file in loader:
             file.metadata["source"]=Path(path).name
