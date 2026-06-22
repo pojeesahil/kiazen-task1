@@ -72,10 +72,11 @@ def askQuestion(question):
     for doc in documents:
         fname=doc.metadata.get("source", "Unknown")
         sources.add(fname)
-    print("Sourced from:", ", ".join(sources))
+    print("Source:", ", ".join(sources))
     print("Answer:",response["answer"])
+    print(" ")
 
-print("Type your question or type 'index' for reindexing of database or type 'exit' to quit.")
+print("Type your question or type 'index' for reindexing of database or type 'exit' to quit.\n")
 while True:
     query=input("Ask a question:")
     q=query.strip().lower()
