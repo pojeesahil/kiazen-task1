@@ -18,19 +18,6 @@ llm = init_chat_model(
     model_provider="google_genai",
     api_key=os.getenv("GOOGLE_API_KEY")
 )
-
-def get_weather(city: str)->str:
-    """Get weather for a given city."""
-    return f"It's always sunny in {city}!"
-agent=create_agent(
-    model=llm,
-    tools=[get_weather],
-    system_prompt="You are a helpful assistant",
-)
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]}
-)
-print(result["messages"][-1].content_blocks)
 def indexDatabase():
     mainDir=Path("./data")
     files=[]
@@ -71,7 +58,17 @@ def askQuestion(question):
     ])
     qa=create_stuff_documents_chain(llm,prompt)
     ret_chain=create_retrieval_chain(retriever,qa)
-    response = ret_chain.invoke({"input": question})
+    response=ret_chain.invoke({"input": question})
     print("Answer:",response["answer"])
 
-askQuestion("which animal acts as ecosystem engineers")
+print("Type your question or type 'index' for reindexing of database or type 'exit' to quit.")
+while True:
+    query=input("Ask a question: ")
+    q=query.strip().lower()
+    if q=="exit":
+        break
+    if q=="index":
+        indexDatabase()
+        print("Reindexed the database")
+    elif q:
+        askQuestion(query)
