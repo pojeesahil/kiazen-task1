@@ -27,7 +27,10 @@ def indexDatabase():
     txt=[]
     for path in files:
         loader=UnstructuredFileLoader(file_path=path)
-        txt.extend(loader.load())
+        loader=loader.load()
+        for file in loader:
+            file.metadata["source"]=Path(path).name
+        txt.extend(loader)
     text_splitter=RecursiveCharacterTextSplitter(
         chunk_size=100,
         chunk_overlap=20,
@@ -49,7 +52,7 @@ def askQuestion(question):
     )
     retriever=vectorstore.as_retriever(search_kwargs={"k":3})  
     pretext=(
-        "You are a helpful assistant. Use the following context to answer the question.\n"
+        "You are a helpful assistant. Use the below context to answer the question.\n"
         "Context:\n{context}"
     )
     prompt=ChatPromptTemplate.from_messages([
@@ -59,11 +62,17 @@ def askQuestion(question):
     qa=create_stuff_documents_chain(llm,prompt)
     ret_chain=create_retrieval_chain(retriever,qa)
     response=ret_chain.invoke({"input": question})
+    sources=set()
+    documents=response.get("context", [])
+    for doc in documents:
+        fname=doc.metadata.get("source", "Unknown")
+        sources.add(fname)
+    print("Sourced from:", ", ".join(sources))
     print("Answer:",response["answer"])
 
 print("Type your question or type 'index' for reindexing of database or type 'exit' to quit.")
 while True:
-    query=input("Ask a question: ")
+    query=input("Ask a question:")
     q=query.strip().lower()
     if q=="exit":
         break
